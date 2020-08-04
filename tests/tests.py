@@ -1,6 +1,6 @@
 from stats.stats import (
     cor, lsrl, estimate, residuals, mse, t_conf_linear, se_linear,
-    t_stat, p_value
+    t_stat, p_value, sum_squares, t_crit, t_pred_y, t_conf_y
 )
 from sklearn.linear_model import LinearRegression
 import math
@@ -128,3 +128,41 @@ def test_p_value():
     p = p_value(t, df, 2)
 
     assert p == .05
+
+
+def test_sum_squares():
+    x = [1, 2, 2, 3]
+
+    assert sum_squares(x) == 2
+
+
+def test_t_crit():
+    assert round(t_crit(.95, 9), 3) == 2.262
+
+
+def test_t_pred_y():
+    x = [6, 7, 7, 8, 10, 10, 11, 12, 14, 15, 16]
+    y = [55, 40, 50, 41, 35, 28, 38, 32, 28, 18, 13]
+
+    k = 1
+    model = lsrl(x, y)
+    s_2 = mse(x, y, model)
+    df = len(x) - (k + 1)
+
+    res = t_pred_y(x, 13, s_2, model, df, rounding=3)
+
+    assert res == (13.919, 38.146)
+
+
+def test_t_conf_y():
+    x = [6, 7, 7, 8, 10, 10, 11, 12, 14, 15, 16]
+    y = [55, 40, 50, 41, 35, 28, 38, 32, 28, 18, 13]
+
+    k = 1
+    model = lsrl(x, y)
+    s_2 = mse(x, y, model)
+    df = len(x) - (k + 1)
+
+    res = t_conf_y(x, 13, s_2, model, df, rounding=3)
+
+    assert res == (21.754, 30.311)

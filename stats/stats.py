@@ -130,11 +130,70 @@ def se_linear(x, mse, rounding=None):
 
 
 def t_conf_linear(b1, se, n, k=1, conf_level=.95, rounding=None):
+    """Returns a confidence interval for the slope of the regression."""
     df = n - (k + 1)
     t_crit = stats.t.ppf(conf_level + (1-conf_level)/2, df=df)
 
     lower = b1 - t_crit * se
     upper = b1 + t_crit * se
+
+    if rounding:
+        lower = round(lower, rounding)
+        upper = round(upper, rounding)
+
+    return (lower, upper)
+
+
+def sum_squares(x):
+    res = 0
+    x_mean = np.mean(x)
+
+    for val in x:
+        res += (val - x_mean) ** 2
+
+    return res
+
+
+def t_crit(conf_level, df):
+    """
+    Returns the t critical value for a given confidence level and degrees
+    of freedom.
+    """
+    return stats.t.ppf(conf_level + (1-conf_level)/2, df=df)
+
+
+def t_pred_y(x, x_star, s_2, model, df, conf_level=0.95, rounding=None):
+    """
+    Calculates a prediction interval for y at a given x.
+    """
+    mean_x = np.mean(x)
+    s_y = sqrt(s_2) * \
+        sqrt((1 / len(x)) + ((x_star - mean_x) ** 2) / sum_squares(x))
+    y = model.predict([[x_star]])[0]
+    t_c = t_crit(conf_level, df)
+
+    lower = y - t_c * sqrt(s_2 + (s_y ** 2))
+    upper = y + t_c * sqrt(s_2 + (s_y ** 2))
+
+    if rounding:
+        lower = round(lower, rounding)
+        upper = round(upper, rounding)
+
+    return (lower, upper)
+
+
+def t_conf_y(x, x_star, s_2, model, df, conf_level=0.95, rounding=None):
+    """
+    Calculates a confidence interval for the expected value of y at a given x.
+    """
+    mean_x = np.mean(x)
+    s_y = sqrt(s_2) * \
+        sqrt((1 / len(x)) + ((x_star - mean_x) ** 2) / sum_squares(x))
+    y = model.predict([[x_star]])[0]
+    t_c = t_crit(conf_level, df)
+
+    lower = y - t_c * s_y
+    upper = y + t_c * s_y
 
     if rounding:
         lower = round(lower, rounding)
@@ -186,5 +245,9 @@ def run_regression(x, y, conf_level=.95):
         "conf_interval": conf,
         "df": df,
         "regression_plot": lambda: regression_plot(x, y, model).show(),
-        "residual_plot": lambda: residual_plot(x, y, model).show()
+        "residual_plot": lambda: residual_plot(x, y, model).show(),
+        "t_pred_y": lambda x_star: t_pred_y(
+            x, x_star, s_2, model, df, conf_level),
+        "t_conf_y": lambda x_star: t_conf_y(
+            x, x_star, s_2, model, df, conf_level)
     }
