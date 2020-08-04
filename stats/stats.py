@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_squared_error
 
 
 # Bivariate Data Analysis Functions
@@ -77,13 +76,11 @@ def residuals(x, y, rounding=None):
     """
     Returns the residual (observed - expected) for a simple linear regression.
     """
-    model = lsrl(x, y)
-    slope = model['slope']
-    intercept = model['intercept']
+    model = lsrl(x, y, summarize=False)
     result = []
 
     for i, _ in enumerate(x):
-        res = y[i] - estimate(intercept, slope, x[i])
+        res = y[i] - model.predict([[x[i]]])[0]
 
         if rounding:
             result.append(round(res, rounding))
@@ -98,17 +95,15 @@ def residual_plot(x, y):
     return scatter_plot(x, residuals(x, y), zero_line=True)
 
 
-def s_squared(x, y, rounding=None, k=1):
-    """Returns the s^2 model variability for a regression."""
-    model = lsrl(x, y)
-    slope = model['slope']
-    intercept = model['intercept']
+def mse(x, y, rounding=None, k=1):
+    """Returns the mean squared error (s^2) for a regression."""
+    model = lsrl(x, y, summarize=False)
     sse = 0
 
     n = len(x)
 
     for i, _ in enumerate(x):
-        res = (y[i] - estimate(intercept, slope, x[i])) ** 2
+        res = (y[i] - model.predict([[x[i]]])[0]) ** 2
         sse += res
 
     result = sse / (n - (k + 1))

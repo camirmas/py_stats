@@ -1,5 +1,6 @@
-from stats.stats import cor, lsrl, estimate, residuals, s_squared
+from stats.stats import cor, lsrl, estimate, residuals, mse
 from sklearn.linear_model import LinearRegression
+import math
 
 
 def test_corr():
@@ -45,8 +46,13 @@ def test_residuals():
     assert residuals(x, y, 3) == [0.0, -0.5, 0.5, 0.0]
 
 
-def test_s_squared():
+def test_mse():
     x = [1, 2, 2, 3]
     y = [3, 4, 5, 6]
 
-    assert s_squared(x, y, 3) == 0.25
+    assert mse(x, y, 3) == 0.25
+
+    x = [6, 7, 7, 8, 10, 10, 11, 12, 14, 15, 16]
+    y = [55, 40, 50, 41, 35, 28, 38, 32, 28, 18, 13]
+
+    assert round(math.sqrt(mse(x, y)), 2) == 5.01
