@@ -113,20 +113,6 @@ def mse(x, y, model, k=1, rounding=None):
     return result
 
 
-def t_conf_linear(b1, se, n, k=1, conf_level=.95, rounding=None):
-    df = n - (k + 1)
-    t_crit = stats.t.ppf(conf_level + (1-conf_level)/2, df=df)
-
-    lower = b1 - t_crit * se
-    upper = b1 + t_crit * se
-
-    if rounding:
-        lower = round(lower, rounding)
-        upper = round(upper, rounding)
-
-    return (lower, upper)
-
-
 def se_linear(x, mse, rounding=None):
     s = sqrt(mse)
     sum_squares = 0
@@ -143,12 +129,50 @@ def se_linear(x, mse, rounding=None):
     return result
 
 
+def t_conf_linear(b1, se, n, k=1, conf_level=.95, rounding=None):
+    df = n - (k + 1)
+    t_crit = stats.t.ppf(conf_level + (1-conf_level)/2, df=df)
+
+    lower = b1 - t_crit * se
+    upper = b1 + t_crit * se
+
+    if rounding:
+        lower = round(lower, rounding)
+        upper = round(upper, rounding)
+
+    return (lower, upper)
+
+
+def t_stat(b1, se, rounding=None):
+    """Calculates the t stat given the slope and standard error."""
+    res = b1 / se
+
+    if rounding:
+        res = round(res, rounding)
+
+    return res
+
+
+def p_value(t, df, rounding=None):
+    """Calculates the p-value given a t stat and degrees of freedom."""
+    res = 2*(1 - stats.t.cdf(abs(t), df))
+
+    if rounding:
+        res = round(res, rounding)
+
+    return res
+
+
 def run_regression(x, y, conf_level=.95):
     """Runs a simple linear regression analysis."""
     model = lsrl(x, y)
     s_2 = mse(x, y, model)
     se = se_linear(x, s_2)
     conf = t_conf_linear(model.coef_[0], se, len(x), conf_level=conf_level)
+    t = t_stat(model.coef_[0], se)
+    k = 1
+    df = len(x) - (k + 1)
+    p = p_value(t, df)
 
     return {
         "model": model,
@@ -156,8 +180,11 @@ def run_regression(x, y, conf_level=.95):
         "slope": model.coef_[0],
         "MSE": s_2,
         "SE": se,
+        "t_stat": t,
+        "p_value": p,
         "conf_level": conf_level,
         "conf_interval": conf,
+        "df": df,
         "regression_plot": lambda: regression_plot(x, y, model).show(),
         "residual_plot": lambda: residual_plot(x, y, model).show()
     }

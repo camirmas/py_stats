@@ -1,5 +1,6 @@
 from stats.stats import (
-    cor, lsrl, estimate, residuals, mse, t_conf_linear, se_linear
+    cor, lsrl, estimate, residuals, mse, t_conf_linear, se_linear,
+    t_stat, p_value
 )
 from sklearn.linear_model import LinearRegression
 import math
@@ -102,3 +103,28 @@ def test_t_conf_linear():
         len(x),
         conf_level=.90,
         rounding=2) == (0.47, 2.53)
+
+
+def test_t_stat():
+    x = [1, 2, 2, 3]
+    b1 = 1.5
+    mse = 0.25
+    se = se_linear(x, mse)
+
+    t = t_stat(b1, se, 2)
+
+    assert t == 4.24
+
+
+def test_p_value():
+    x = [1, 2, 2, 3]
+    b1 = 1.5
+    mse = 0.25
+    se = se_linear(x, mse)
+    t = t_stat(b1, se, 2)
+    k = 1
+    df = len(x) - (k+1)
+
+    p = p_value(t, df, 2)
+
+    assert p == .05
